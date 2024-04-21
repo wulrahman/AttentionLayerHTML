@@ -95,7 +95,7 @@ class WordEmbeddings {
         for (let i = 0; i < embedding.rows; i++) {
             text.push(this.embeddingtoWord(embedding.data[i]));
         }
-        return text;
+        return text.join(' ');
     }
 
     trainWordEmbeddings(text) {

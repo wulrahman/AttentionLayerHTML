@@ -1,98 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
     const inputStrings = [
-        "what is the capital of France?",
-        "how tall is the Eiffel Tower?",
-        "what is the population of Tokyo?",
-        "who is the president of the United States?",
-        "what is the currency of Japan?",
-        "how many time zones are there in the world?",
-        "what is the largest country in the world?",
-        "who painted the Mona Lisa?",
-        "what is the square root of 16?",
-        "what is the capital of Australia?",
-        "how many planets are there in our solar system?",
-        "who wrote the book 'To Kill a Mockingbird'?",
-        "what is the largest ocean in the world?",
-        "what is the national animal of India?",
-        "how many bones are there in the human body?",
-        "who discovered electricity?",
-        "what is the chemical symbol for gold?",
-        "what is the largest desert in the world?",
-        "who is the author of the Harry Potter series?",
-        "what is the speed of light in a vacuum?"
+        "what is your name?",
+        "who is your father?"
     ];
 
     const targetStrings = [
-        "Paris is the capital of France. It is known as the city of love.",
-        "The Eiffel Tower is 330 meters tall. It was built in 1889.",
-        "The population of Tokyo is approximately 14 million people.",
-        "The current president of the United States is Joe Biden.",
-        "The currency of Japan is the Japanese yen.",
-        "There are 24 time zones in the world.",
-        "The largest country in the world by land area is Russia.",
-        "The Mona Lisa was painted by Leonardo da Vinci.",
-        "The square root of 16 is 4.",
-        "The capital of Australia is Canberra.",
-        "There are 8 planets in our solar system.",
-        "The book 'To Kill a Mockingbird' was written by Harper Lee.",
-        "The largest ocean in the world is the Pacific Ocean.",
-        "The national animal of India is the Bengal tiger.",
-        "There are 206 bones in the human body.",
-        "Electricity was discovered by Benjamin Franklin.",
-        "The chemical symbol for gold is Au.",
-        "The largest desert in the world is the Sahara Desert.",
-        "The author of the Harry Potter series is J.K. Rowling.",
-        "The speed of light in a vacuum is approximately 299,792,458 meters per second."
+        "I am a chatbot.",
+        "my father is a waheed.",
     ];
-
-    const additionalInputStrings = [
-        "what is the capital of China?",
-        "how deep is the Mariana Trench?",
-        "what is the population of India?",
-        "who is the Prime Minister of the United Kingdom?",
-        "what is the largest mountain in the world?",
-        "how many continents are there?",
-        "what is the official language of Brazil?",
-        "who invented the telephone?",
-        "what is the chemical symbol for oxygen?",
-        "what is the largest waterfall in the world?",
-        "who is the author of 'Pride and Prejudice'?",
-        "what is the national bird of the United States?",
-        "how many teeth does an adult human have?",
-        "who discovered gravity?",
-        "what is the atomic number of carbon?",
-        "what is the highest temperature ever recorded?",
-        "who is the founder of Microsoft?",
-        "what is the largest lake in Africa?",
-        "who is the author of '1984'?",
-        "what is the distance from the Earth to the Moon?"
-    ];
-
-    const additionalTargetStrings = [
-        "The capital of China is Beijing.",
-        "The Mariana Trench is approximately 11,034 meters deep.",
-        "The population of India is approximately 1.3 billion people.",
-        "The current Prime Minister of the United Kingdom is Boris Johnson.",
-        "The largest mountain in the world is Mount Everest.",
-        "There are 7 continents in the world.",
-        "The official language of Brazil is Portuguese.",
-        "The telephone was invented by Alexander Graham Bell.",
-        "The chemical symbol for oxygen is O.",
-        "The largest waterfall in the world is Angel Falls in Venezuela.",
-        "The author of 'Pride and Prejudice' is Jane Austen.",
-        "The national bird of the United States is the bald eagle.",
-        "An adult human has 32 teeth.",
-        "Gravity was discovered by Sir Isaac Newton.",
-        "The atomic number of carbon is 6.",
-        "The highest temperature ever recorded was 56.7 degrees Celsius (134 degrees Fahrenheit) in Death Valley, California, USA.",
-        "Microsoft was founded by Bill Gates and Paul Allen.",
-        "The largest lake in Africa is Lake Victoria.",
-        "The author of '1984' is George Orwell.",
-        "The distance from the Earth to the Moon is approximately 384,400 kilometers (238,900 miles)."
-    ];
-
-    inputStrings.push(...additionalInputStrings);
-    targetStrings.push(...additionalTargetStrings);
 
     const uniqueWords = new Set();
 
@@ -137,8 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const maxWordsPerTarget = maximumWordsPerInput(targetStrings);
     const maxWordsPerInputAndTarget = Math.max(maxWordsPerInput, maxWordsPerTarget);
     
-    var learningRate = 1e-5;
-    var epoch = 1000;
+    var learningRate = 1e-4;
+    var epoch = 1000000;
 
     const dModel = maxWordsPerInputAndTarget;
     const numHeads =  maxWordsPerInputAndTarget;
@@ -189,9 +104,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const target = indexedDictionaryModel.stringToMatrix(targetString, dModel, dModel);
 
                 // const target = wordEmbeddings.textToMatrix(targetString, dModel, dModel);
-                const output = attention.forward(query, query, query);
+                const output = attention.forward(query, key, value, false);
                 if(i == epoch) {
-                    attention.visualizeAttentions(query, query, query);
+                    attention.visualizeAttentions(query, key, value);
                 }
 
                 attention.backward(target.subtract(output), learningRate);
@@ -217,12 +132,16 @@ document.addEventListener('DOMContentLoaded', function() {
             learningRates.push(learningRate);
 
 
-            // if (losses.length > 0 && loss > losses[losses.length - 1]) {
-            //     learningRate *= 0.995;
-            // }
+            if (losses.length > 0 && loss > losses[losses.length - 1]) {
+                learningRate *= 0.995;
+            }
 
-            losses.push(loss);
-            console.log(`Epoch ${i} Loss: ${loss}`);
+            if (i % 100 === 0) {
+                console.log(`Epoch ${i} Loss: ${loss}`);
+                losses.push(loss);
+
+            }
+
         }
 
         return losses;
@@ -261,8 +180,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const query = wordEmbeddings.textToMatrix(target, dModel, dModel);
         const value = indexedDictionaryModel.stringToMatrix(target, dModel, dModel);
         const key = huffmanModel.textToMatrix(target, dModel, dModel, 0)
-        const output = attention.forward(query, query, query);    
-        return wordEmbeddings.embeddingtoText(output).join(' ');
+        const output = attention.forward(query, key, value, false)    
+        return indexedDictionaryModel.matrix2String(output)
+        // return wordEmbeddings.embeddingtoText(output);
     }
 
 

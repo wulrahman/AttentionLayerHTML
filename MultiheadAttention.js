@@ -36,16 +36,24 @@ class MultiheadAttention {
         return input.multiplyElementWise(mask).multiplyScaler(1 / (1 - this.dropout));
     }
 
-    forward(query, key, value) {
+    forward(query, key, value, mask = true) {
         const batchSize = query.rows;
     
         this.outputs = [];
         this.inputs = [[query, key, value]];
     
-        const queryProjected = this._dropout(query.dot(this.queryWeights));
-        const keyProjected = this._dropout(key.dot(this.keyWeights));
-        const valueProjected = this._dropout(value.dot(this.valueWeights));
-    
+        let queryProjected, keyProjected, valueProjected;
+        if(mask) {
+            queryProjected = this._dropout(query.multiplyElementWise(this.queryWeights));
+            keyProjected = this._dropout(key.multiplyElementWise(this.keyWeights));
+            valueProjected = this._dropout(value.multiplyElementWise(this.valueWeights));
+        }
+        else {
+            queryProjected = query.multiplyElementWise(this.queryWeights);
+            keyProjected = key.multiplyElementWise(this.keyWeights);
+            valueProjected = value.multiplyElementWise(this.valueWeights);
+        }
+        
         var scaledDotProducts = new Matrix(0, this.dModel);
         for (let i = 0; i < this.numHeads; i++) {
             const [scaledDotProduct] = this.scaledDotProductAttention(
@@ -121,9 +129,7 @@ class MultiheadAttention {
     
         // Dot product of attention weights with value
         const context = attentionWeights.dot(value);
-    
-        console.log("Attention scores: ", scores.toArray(), context);
-    
+            
         // Prepare data for plotting
         const scoreArray = scores.toArray();
         const weightArray = attentionWeights.toArray();
