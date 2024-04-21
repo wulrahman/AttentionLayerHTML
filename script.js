@@ -137,8 +137,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const maxWordsPerTarget = maximumWordsPerInput(targetStrings);
     const maxWordsPerInputAndTarget = Math.max(maxWordsPerInput, maxWordsPerTarget);
     
-    var learningRate = 1e-4;
-    var epoch = 100000;
+    var learningRate = 1e-5;
+    var epoch = 1000;
 
     const dModel = maxWordsPerInputAndTarget;
     const numHeads =  maxWordsPerInputAndTarget;
@@ -189,10 +189,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const target = indexedDictionaryModel.stringToMatrix(targetString, dModel, dModel);
 
                 // const target = wordEmbeddings.textToMatrix(targetString, dModel, dModel);
-                const output = attention.forward(query, query.positionEncode(), value);
+                const output = attention.forward(query, query, query);
                 if(i == epoch) {
-                    attention.visualizeAttentions(query, query.positionEncode(), value);
+                    attention.visualizeAttentions(query, query, query);
                 }
+
+                attention.backward(target.subtract(output), learningRate);
+
                 const currentLoss = output.meanSquaredError(target);
                 if (isNaN(currentLoss)) {
                     console.log("Training stopped due to NaN loss.");
@@ -202,9 +205,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 totalLoss.add(target.subtract(output));
             }
 
+            if (i % 1000 === 0) {
+                const randomIndex = Math.floor(Math.random() * inputStrings.length);
+                const randomInput = inputStrings[randomIndex];
+                const randomTarget = targetStrings[randomIndex];
+                const generatedResponse = generateResponse(randomInput);
+                console.log(`Generated response for input "${randomInput}": ${generatedResponse}`);
+            }
+
             totalLoss.divideScaler(inputStrings.length);
             learningRates.push(learningRate);
-            attention.backward(totalLoss, learningRate);
 
 
             // if (losses.length > 0 && loss > losses[losses.length - 1]) {
@@ -251,8 +261,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const query = wordEmbeddings.textToMatrix(target, dModel, dModel);
         const value = indexedDictionaryModel.stringToMatrix(target, dModel, dModel);
         const key = huffmanModel.textToMatrix(target, dModel, dModel, 0)
-        const output = attention.forward(query,  query.positionEncode(), value);    
-        return indexedDictionaryModel.matrix2String(output);
+        const output = attention.forward(query, query, query);    
+        return wordEmbeddings.embeddingtoText(output).join(' ');
     }
 
 

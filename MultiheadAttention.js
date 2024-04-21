@@ -32,6 +32,10 @@ class MultiheadAttention {
         return (input.multiplyElementWise(mask)).multiplyScaler(scale);
     }
 
+    _dropoutBackward(input, mask) {
+        return input.multiplyElementWise(mask).multiplyScaler(1 / (1 - this.dropout));
+    }
+
     forward(query, key, value) {
         const batchSize = query.rows;
     
@@ -177,9 +181,7 @@ class MultiheadAttention {
         return [attentionWeights.dot(value), attentionWeights];
     }    
 
-    scaledDotProductAttentionBackward(gradientsBackwardOutput, query, key, value) {
-        const sqrtHeadSize = Math.sqrt(this.headSize);
-            
+    scaledDotProductAttentionBackward(gradientsBackwardOutput, query, key, value) {            
         // Compute gradients with respect to attention weights
         const gradientsAttentionWeights = gradientsBackwardOutput.dot(value.transpose());
     
@@ -187,11 +189,11 @@ class MultiheadAttention {
         const attentionWeights = scores.softmax();
     
         // Compute gradients with respect to scores
-        const gradientsScores = gradientsAttentionWeights.dot(attentionWeights.transpose()).multiplyScaler(1 / this.dModel);
+        const gradientsScores = gradientsAttentionWeights.softmaxBackward(attentionWeights).multiplyScaler(1 / this.headSize);
     
         // Compute gradients with respect to query, key, and value
-        const gradientsQuery = gradientsScores.dot(key).multiplyScaler(1 / sqrtHeadSize);
-        const gradientsKey = gradientsScores.dot(query).multiplyScaler(1 / sqrtHeadSize);
+        const gradientsQuery = gradientsScores.dot(key);
+        const gradientsKey = gradientsScores.dot(query);
         const gradientsValue = attentionWeights.transpose().dot(gradientsBackwardOutput);
     
         return [gradientsQuery, gradientsKey, gradientsValue];

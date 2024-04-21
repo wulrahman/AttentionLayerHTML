@@ -35,6 +35,22 @@ class Matrix {
         return result;
     }
 
+    softmaxBackward(softmax) {
+        const result = new Matrix(softmax.rows, softmax.cols);
+
+        for (let i = 0; i < softmax.rows; i++) {
+            for (let j = 0; j < softmax.cols; j++) {
+                if (i === j) {
+                    result.data[i][j] = softmax.data[i][j] * (1 - softmax.data[i][j]);
+                } else {
+                    result.data[i][j] = -softmax.data[i][j] * softmax.data[j][i];
+                }
+            }
+        }
+
+        return result;
+    }
+
     slice(start, end) {
         const result = new Matrix(end[0] - start[0], end[1] - start[1]);
 
