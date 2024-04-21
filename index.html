@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My HTML Page</title>
+    <style>
+        h1 {
+            color: red;
+        }
+
+        body {
+            background-color: lightblue;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #response {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        #inputElement {
+            display: block;
+            margin: 20px auto;
+            padding: 10px;
+            font-size: 16px;
+            width: 80%;
+            max-width: 400px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        #lossGraph {
+            display: block;
+            margin: 0 auto;
+            border: 1px solid black;
+            width: 80%;
+            max-width: 800px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="response">Hello, World!</h1>
+    <input type="text" id="inputElement" placeholder="Enter your input">
+    <canvas id="lossGraph"></canvas>
+    
+
+    <script src="Matrix.js"></script>
+    <script src="IndexDictionary.js"></script>
+    <script src="MultiheadAttention.js"></script>
+    <script src="WordEmbeddings.js"></script>
+    <script src="BuildHuffmanGramModel.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
